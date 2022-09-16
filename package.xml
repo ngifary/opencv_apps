@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>opencv_apps</name>
-  <version>2.0.2</version>
+  <version>0.0.0</version>
   <description>
     <p>opencv_apps provides various nodes that run internally OpenCV's functionalities and publish the result as ROS topics. With opencv_apps, you can skip writing OpenCV application codes for a lot of its functionalities by simply running a launch file that corresponds to OpenCV's functionality you want.</p>
     <ul>
@@ -16,30 +16,27 @@
     <p>The most of code is originally taken from https://github.com/Itseez/opencv/tree/master/samples/cpp</p>
   </description>
 
-  <maintainer email="kei.okada@gmail.com">Kei Okada</maintainer>
   <maintainer email="nizamgifary@yahoo.com">Nizam Gifary</maintainer>
 
   <license>BSD</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
+  <depend>rclcpp</depend>
+  <depend>rclcpp_components</depend>
   <depend>cv_bridge</depend>
   <depend>image_transport</depend>
   <depend>image_view</depend>
-  <depend>rclcpp</depend>
-  <depend>rclcpp_components</depend>
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
   <depend>std_srvs</depend>
-  <depend>message_runtime</depend>
 
   <exec_depend>ros2launch</exec_depend>
   <exec_depend>launch_ros</exec_depend>
   <exec_depend>rcutils</exec_depend>
-  <test_depend>image_proc</test_depend>
-  <test_depend>topic_tools</test_depend>
-  <test_depend>compressed_image_transport</test_depend>
-
+  
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
   <test_depend>ament_cmake_gtest</test_depend>
 
   <export>

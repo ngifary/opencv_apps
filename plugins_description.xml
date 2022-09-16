@@ -1,0 +1,8 @@
+<class_libraries>
+    <library path="opencv_apps_plugins">
+      <class type="opencv_apps::EdgeDetection">
+        <description>This is a plugin.</description>
+      </class>
+    </library>
+  </class_libraries>
+  
