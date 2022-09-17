@@ -50,8 +50,8 @@
  * @author OpenCV team
  */
 
-#include <opencv_apps/edge_detection.hpp>
-#include <rclcpp_components/register_node_macro.hpp>
+#include "opencv_apps/edge_detection.hpp"
+#include "rclcpp_components/register_node_macro.hpp"
 
 namespace opencv_apps
 {
@@ -77,7 +77,9 @@ namespace opencv_apps
       edge_type_ = declare_parameter(desc.name, 0, desc);
     }
 
-    declareCannyParameter();
+    canny_paramps_visible_ = false;
+
+    // declareCannyParameter();
 
     window_name_ = "Edge Detection Demo";
     canny_threshold1_ = 100; // only for canny
@@ -97,6 +99,17 @@ namespace opencv_apps
 
   EdgeDetection::~EdgeDetection() {}
 
+  void EdgeDetection::undeclareCannyParameter()
+  {
+    std::vector<std::string> param_names = {"canny_threshold1", "canny_threshold2", "apertureSize", "apply_blur_pre", "postBlurSize", "postBlurSigma", "apply_blur_post", "L2gradient"};
+    std::vector<rclcpp::Parameter> params = get_parameters(param_names);
+    for (auto param_name : param_names)
+    {
+      undeclare_parameter(param_name);
+    }
+    RCLCPP_INFO(get_logger(), "[EdgeDetection] Canny Parameters are now deleted");
+  }
+
   void EdgeDetection::declareCannyParameter()
   {
     {
@@ -104,6 +117,7 @@ namespace opencv_apps
       desc.name = "canny_threshold1";
       desc.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
       desc.description = "First threshold for the hysteresis procedure.";
+      desc.dynamic_typing = true;
       desc.integer_range.resize(1);
       auto &integer_range = desc.integer_range.at(0);
       integer_range.from_value = 0;
@@ -116,6 +130,7 @@ namespace opencv_apps
       desc.name = "canny_threshold2";
       desc.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
       desc.description = "Second threshold for the hysteresis procedure.";
+      desc.dynamic_typing = true;
       desc.integer_range.resize(1);
       auto &integer_range = desc.integer_range.at(0);
       integer_range.from_value = 0;
@@ -128,6 +143,7 @@ namespace opencv_apps
       desc.name = "apertureSize";
       desc.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
       desc.description = "Aperture size for the Sobel() operator.";
+      desc.dynamic_typing = true;
       desc.integer_range.resize(1);
       auto &integer_range = desc.integer_range.at(0);
       integer_range.from_value = 1;
@@ -140,6 +156,7 @@ namespace opencv_apps
       desc.name = "apply_blur_pre";
       desc.type = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL;
       desc.description = "Flag, applying Blur() to input image";
+      desc.dynamic_typing = true;
       apply_blur_pre_ = declare_parameter(desc.name, true, desc);
     }
 
@@ -148,6 +165,7 @@ namespace opencv_apps
       desc.name = "postBlurSize";
       desc.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
       desc.description = "Aperture size for the Blur() operator.";
+      desc.dynamic_typing = true;
       desc.integer_range.resize(1);
       auto &integer_range = desc.integer_range.at(0);
       integer_range.from_value = 3;
@@ -160,6 +178,7 @@ namespace opencv_apps
       desc.name = "postBlurSigma";
       desc.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
       desc.description = "Sigma for the GaussianBlur() operator.";
+      desc.dynamic_typing = true;
       desc.floating_point_range.resize(1);
       auto &floating_point_range = desc.floating_point_range.at(0);
       floating_point_range.from_value = 0.0;
@@ -172,6 +191,7 @@ namespace opencv_apps
       desc.name = "apply_blur_post";
       desc.type = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL;
       desc.description = "Flag, applying GaussianBlur() to output(edge) image";
+      desc.dynamic_typing = true;
       apply_blur_post_ = declare_parameter(desc.name, false, desc);
     }
 
@@ -180,8 +200,10 @@ namespace opencv_apps
       desc.name = "L2gradient";
       desc.type = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL;
       desc.description = "Flag, indicating whether a more accurate  L_2 norm should be used to calculate the image gradient magnitude ( L2gradient=true ), or whether the default  L_1 norm is enough ( L2gradient=false ).";
+      desc.dynamic_typing = true;
       L2gradient_ = declare_parameter(desc.name, false, desc);
     }
+    RCLCPP_INFO(get_logger(), "[EdgeDetection] Canny Parameters can now be set dynamically");
   }
 
   rcl_interfaces::msg::SetParametersResult EdgeDetection::paramCallback(const std::vector<rclcpp::Parameter> &parameters)
@@ -308,6 +330,11 @@ namespace opencv_apps
       {
       case opencv_apps::EdgeType::SOBEL:
       {
+        if (canny_paramps_visible_)
+        {
+          undeclareCannyParameter();
+          canny_paramps_visible_ = false;
+        }
         /// Generate grad_x and grad_y
         cv::Mat grad_x, grad_y;
         cv::Mat abs_grad_x, abs_grad_y;
@@ -334,6 +361,11 @@ namespace opencv_apps
       }
       case opencv_apps::EdgeType::LAPLACE:
       {
+        if (canny_paramps_visible_)
+        {
+          undeclareCannyParameter();
+          canny_paramps_visible_ = false;
+        }
         cv::Mat dst;
         int kernel_size = 3;
         int scale = 1;
@@ -349,6 +381,11 @@ namespace opencv_apps
       }
       case opencv_apps::EdgeType::CANNY:
       {
+        if (!canny_paramps_visible_)
+        {
+          declareCannyParameter();
+          canny_paramps_visible_ = true;
+        }
         int edge_thresh = 1;
         int kernel_size = 3;
         int const max_canny_threshold1 = 500;
@@ -371,7 +408,7 @@ namespace opencv_apps
 
         new_window_name = "Canny Edge Detection Demo";
 
-        // /// Create a Trackbar for user to enter threshold
+        // TODO: Create a Trackbar for user to enter threshold
         // if (debug_view_)
         // {
         //   if (window_name_ == new_window_name)

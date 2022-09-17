@@ -18,8 +18,6 @@ namespace opencv_apps
     {
     private:
     protected:
-        // bool latch_ = false;
-
         /** \brief The maximum queue size (default: 3). */
         int max_queue_size_ = 3;
 
@@ -38,6 +36,7 @@ namespace opencv_apps
         /** \brief Indicates that the camera_info topic should be subscribed to */
         bool use_camera_info_;
 
+        /** \brief display output on GUI. */
         bool debug_view_ = false;
 
         rclcpp::Time prev_stamp_ = rclcpp::Time(0, 0);

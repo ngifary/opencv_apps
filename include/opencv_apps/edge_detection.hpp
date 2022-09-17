@@ -1,15 +1,15 @@
 #ifndef OPENCV_APPS_EDGE_DETECTION_NODE_HPP_
 #define OPENCV_APPS_EDGE_DETECTION_NODE_HPP_
 
-#include <rclcpp/rclcpp.hpp>
-#include <image_transport/image_transport.hpp>
-#include <sensor_msgs/msg/image.hpp>
-#include <cv_bridge/cv_bridge.h>
+#include "rclcpp/rclcpp.hpp"
+#include "image_transport/image_transport.hpp"
+#include "sensor_msgs/msg/image.hpp"
+#include "cv_bridge/cv_bridge.h"
 
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
+#include "opencv2/highgui/highgui.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
 
-#include <opencv_apps/node.hpp>
+#include "opencv_apps/node.hpp"
 
 namespace opencv_apps
 {
@@ -22,9 +22,14 @@ namespace opencv_apps
     class EdgeDetection : public OpenCVNode
     {
     private:
-        /* data */
+        // /** \brief The maximum queue size (default: 3). */
+        // int max_queue_size_ = 3;
+
+        // /** \brief display output on GUI. */
+        // bool debug_view_ = false;
 
         /** \brief edge detection parameters */
+        bool canny_paramps_visible_;
         int edge_type_;
         int canny_threshold1_;
         int canny_threshold2_;
@@ -48,6 +53,8 @@ namespace opencv_apps
         void imageCallback(const sensor_msgs::msg::Image::ConstSharedPtr &msg);
 
         void doWork(const sensor_msgs::msg::Image::ConstSharedPtr &msg, const std::string &input_frame_from_msg);
+
+        void undeclareCannyParameter();
 
         void declareCannyParameter();
 

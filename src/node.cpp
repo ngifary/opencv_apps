@@ -4,18 +4,12 @@ namespace opencv_apps
 {
     OpenCVNode::OpenCVNode(std::string node_name, const rclcpp::NodeOptions &options) : rclcpp::Node(node_name, options)
     {
-        // {
-        //     rcl_interfaces::msg::ParameterDescriptor desc;
-        //     desc.name = "latch";
-        //     desc.type = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL;
-        //     desc.description = "set true if latch topic publication.";
-        //     latch_ = declare_parameter(desc.name, latch_, desc);
-        // }
         {
             rcl_interfaces::msg::ParameterDescriptor desc;
             desc.name = "debug_view";
             desc.type = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL;
             desc.description = "set true to adjust parameter at runtime.";
+            desc.read_only = true;
             debug_view_ = declare_parameter(desc.name, debug_view_, desc);
         }
         {
@@ -58,11 +52,6 @@ namespace opencv_apps
         // Here update class attributes, do some actions, etc.
         for (const auto &param : parameters)
         {
-            // if (param.get_name() == "latch")
-            // {
-            //     latch_ = param.as_bool();
-            //     RCLCPP_INFO(get_logger(), "[Node] Setting the latch value to: %s.", latch_ ? "true" : "false");
-            // }
             if (param.get_name() == "debug_view")
             {
                 debug_view_ = param.as_bool();
