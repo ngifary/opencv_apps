@@ -1,6 +1,8 @@
 install/
 log/
 build/
+cfg/
+test/
 
 # Ignore generated docs
 *.dox

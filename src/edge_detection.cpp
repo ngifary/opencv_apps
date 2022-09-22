@@ -231,47 +231,47 @@ namespace opencv_apps
         default:
           break;
         }
-        RCLCPP_INFO(get_logger(), "[EdgeDetection] New algorithm use: %s", edge_type_str_.c_str());
+        RCLCPP_INFO(get_logger(), "[%s] New algorithm use: %s", get_name(), edge_type_str_.c_str());
       }
       if (param.get_name() == "canny_threshold1")
       {
         canny_threshold1_ = param.as_int();
-        RCLCPP_INFO(get_logger(), "[EdgeDetection] New canny_threshold1: %i", canny_threshold1_);
+        RCLCPP_INFO(get_logger(), "[%s] New canny_threshold1: %i", get_name(), canny_threshold1_);
       }
       if (param.get_name() == "canny_threshold2")
       {
         canny_threshold2_ = param.as_int();
-        RCLCPP_INFO(get_logger(), "[EdgeDetection] New canny_threshold2: %i", canny_threshold2_);
+        RCLCPP_INFO(get_logger(), "[%s] New canny_threshold2: %i", get_name(), canny_threshold2_);
       }
       if (param.get_name() == "apertureSize")
       {
         apertureSize_ = param.as_int();
-        RCLCPP_INFO(get_logger(), "[EdgeDetection] New apertureSize: %i", apertureSize_);
+        RCLCPP_INFO(get_logger(), "[%s] New apertureSize: %i", get_name(), apertureSize_);
       }
       if (param.get_name() == "L2gradient")
       {
         L2gradient_ = param.as_bool();
-        RCLCPP_INFO(get_logger(), "[EdgeDetection] Setting the L2gradient value to: %s.", L2gradient_ ? "true" : "false");
+        RCLCPP_INFO(get_logger(), "[%s] Setting the L2gradient value to: %s.", get_name(), L2gradient_ ? "true" : "false");
       }
       if (param.get_name() == "apply_blur_pre")
       {
         apply_blur_pre_ = param.as_bool();
-        RCLCPP_INFO(get_logger(), "[EdgeDetection] Setting the apply_blur_pre value to: %s.", apply_blur_pre_ ? "true" : "false");
+        RCLCPP_INFO(get_logger(), "[%s] Setting the apply_blur_pre value to: %s.", get_name(), apply_blur_pre_ ? "true" : "false");
       }
       if (param.get_name() == "apply_blur_post")
       {
         apply_blur_post_ = param.as_bool();
-        RCLCPP_INFO(get_logger(), "[EdgeDetection] Setting the apply_blur_post value to: %s.", apply_blur_post_ ? "true" : "false");
+        RCLCPP_INFO(get_logger(), "[%s] Setting the apply_blur_post value to: %s.", get_name(), apply_blur_post_ ? "true" : "false");
       }
       if (param.get_name() == "postBlurSize")
       {
         postBlurSize_ = param.as_int();
-        RCLCPP_INFO(get_logger(), "[EdgeDetection] New postBlurSize: %i", postBlurSize_);
+        RCLCPP_INFO(get_logger(), "[%s] New postBlurSize: %i", get_name(), postBlurSize_);
       }
       if (param.get_name() == "postBlurSigma")
       {
         postBlurSigma_ = param.as_double();
-        RCLCPP_INFO(get_logger(), "[EdgeDetection] New postBlurSigma: %f", postBlurSigma_);
+        RCLCPP_INFO(get_logger(), "[%s] New postBlurSigma: %f", get_name(), postBlurSigma_);
       }
     }
     return result;

@@ -55,7 +55,7 @@ namespace opencv_apps
             if (param.get_name() == "debug_view")
             {
                 debug_view_ = param.as_bool();
-                RCLCPP_INFO(get_logger(), "[Node] Setting the debug_view value to: %s.", debug_view_ ? "true" : "false");
+                RCLCPP_INFO(get_logger(), "[%s] Setting the debug_view value to: %s.", get_name(), debug_view_ ? "true" : "false");
             }
         }
         return result;
