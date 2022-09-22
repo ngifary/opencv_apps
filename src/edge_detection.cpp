@@ -79,8 +79,6 @@ namespace opencv_apps
 
     canny_paramps_visible_ = false;
 
-    // declareCannyParameter();
-
     window_name_ = "Edge Detection Demo";
     canny_threshold1_ = 100; // only for canny
     canny_threshold2_ = 200; // only for canny
@@ -448,6 +446,6 @@ namespace opencv_apps
     prev_stamp_ = msg->header.stamp;
   }
 
-} // namespace edge_detection
+} // namespace opencv_apps
 
 RCLCPP_COMPONENTS_REGISTER_NODE(opencv_apps::EdgeDetection)

@@ -1,13 +1,7 @@
 #ifndef OPENCV_APPS_EDGE_DETECTION_NODE_HPP_
 #define OPENCV_APPS_EDGE_DETECTION_NODE_HPP_
 
-#include "rclcpp/rclcpp.hpp"
-#include "image_transport/image_transport.hpp"
-#include "sensor_msgs/msg/image.hpp"
-#include "cv_bridge/cv_bridge.h"
-
 #include "opencv2/highgui/highgui.hpp"
-#include "opencv2/imgproc/imgproc.hpp"
 
 #include "opencv_apps/node.hpp"
 
