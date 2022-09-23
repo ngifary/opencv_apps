@@ -22,10 +22,10 @@ namespace opencv_apps
         }
 
         RCLCPP_DEBUG(this->get_logger(), "OpenCV Node successfully created with the following parameters:\n"
-                                        //  " - latch            : %s\n"
+                                         //  " - latch            : %s\n"
                                          " - debug_view       : %s\n"
                                          " - max_queue_size   : %i",
-                    //  (latch_) ? "true" : "false",
+                     //  (latch_) ? "true" : "false",
                      (debug_view_) ? "true" : "false",
                      max_queue_size_);
 
@@ -34,6 +34,31 @@ namespace opencv_apps
     }
 
     OpenCVNode::~OpenCVNode() {}
+
+    void OpenCVNode::subscribe()
+    {
+        RCLCPP_DEBUG(get_logger(), "Subscribing to image topic.");
+        if (use_camera_info_)
+            cam_sub_ = image_transport::create_camera_subscription(this, "image", std::bind(&OpenCVNode::imageCallbackWithInfo, this, std::placeholders::_1, std::placeholders::_2), "raw", imageQoS().get_rmw_qos_profile());
+        else
+            img_sub_ = image_transport::create_subscription(this, "image", std::bind(&OpenCVNode::imageCallback, this, std::placeholders::_1), "raw", imageQoS().get_rmw_qos_profile());
+    }
+
+    void OpenCVNode::imageCallbackWithInfo(const sensor_msgs::msg::Image::ConstSharedPtr &msg, const sensor_msgs::msg::CameraInfo::ConstSharedPtr &cam_info)
+    {
+        doWork(msg, cam_info->header.frame_id);
+    }
+
+    void OpenCVNode::imageCallback(const sensor_msgs::msg::Image::ConstSharedPtr &msg)
+    {
+        doWork(msg, msg->header.frame_id);
+    }
+
+    void OpenCVNode::doWork(const sensor_msgs::msg::Image::ConstSharedPtr &msg, const std::string &input_frame_from_msg)
+    {
+        (void) msg;
+        (void) input_frame_from_msg;
+    }
 
     void OpenCVNode::unsubscribe()
     {

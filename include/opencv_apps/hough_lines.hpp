@@ -2,9 +2,9 @@
 #define OPENCV_APPS_HOUGH_LINES_NODE_HPP_
 
 #include "opencv2/highgui/highgui.hpp"
-#include "opencv_apps/msg/line.h"
-#include "opencv_apps/msg/line_array.h"
-#include "opencv_apps/msg/line_array_stamped.h"
+#include "opencv_apps/msg/line.hpp"
+#include "opencv_apps/msg/line_array.hpp"
+#include "opencv_apps/msg/line_array_stamped.hpp"
 
 #include "opencv_apps/node.hpp"
 
@@ -42,10 +42,6 @@ namespace opencv_apps
 
         const std::string &frameWithDefault(const std::string &frame, const std::string &image_frame);
 
-        void imageCallbackWithInfo(const sensor_msgs::msg::Image::ConstSharedPtr &msg, const sensor_msgs::msg::CameraInfo::ConstSharedPtr &cam_info);
-
-        void imageCallback(const sensor_msgs::msg::Image::ConstSharedPtr &msg);
-
         void doWork(const sensor_msgs::msg::Image::ConstSharedPtr &msg, const std::string &input_frame_from_msg);
 
     public:
@@ -55,4 +51,4 @@ namespace opencv_apps
 
 } // namespace opencv_apps
 
-#endif
+#endif // OPENCV_APPS_HOUGH_LINES_NODE_HPP_

@@ -47,47 +47,157 @@ namespace opencv_apps
 {
   HoughCircles::HoughCircles(const rclcpp::NodeOptions &options) : OpenCVNode("HoughCircles", options)
   {
+    {
+      rcl_interfaces::msg::ParameterDescriptor desc;
+      desc.name = "use_camera_info";
+      desc.type = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL;
+      desc.description = "Indicates that the camera_info topic should be subscribed to to get the default input_frame_id. Otherwise the frame from the image message will be used.";
+      use_camera_info_ = declare_parameter(desc.name, false, desc);
+    }
+
+    {
+      rcl_interfaces::msg::ParameterDescriptor desc;
+      desc.name = "debug_image_type";
+      desc.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
+      desc.description = "Select image type for debug output.";
+      desc.integer_range.resize(1);
+      auto &integer_range = desc.integer_range.at(0);
+      integer_range.from_value = 0;
+      integer_range.to_value = 2;
+      debug_image_type_ = declare_parameter(desc.name, 0, desc);
+    }
+
+    {
+      rcl_interfaces::msg::ParameterDescriptor desc;
+      desc.name = "canny_threshold";
+      desc.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+      desc.description = "Canny threshold.";
+      desc.floating_point_range.resize(1);
+      auto &floating_point_range = desc.floating_point_range.at(0);
+      floating_point_range.from_value = 1.0;
+      floating_point_range.to_value = 255.0;
+      floating_point_range.step = 0.01;
+      canny_threshold_ = declare_parameter(desc.name, 200.0, desc);
+    }
+
+    {
+      rcl_interfaces::msg::ParameterDescriptor desc;
+      desc.name = "accumulator_threshold";
+      desc.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+      desc.description = "Accumulator threshold.";
+      desc.floating_point_range.resize(1);
+      auto &floating_point_range = desc.floating_point_range.at(0);
+      floating_point_range.from_value = 1.0;
+      floating_point_range.to_value = 200.0;
+      floating_point_range.step = 0.01;
+      accumulator_threshold_ = declare_parameter(desc.name, 50.0, desc);
+    }
+
+    {
+      rcl_interfaces::msg::ParameterDescriptor desc;
+      desc.name = "gaussian_blur_size";
+      desc.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
+      desc.description = "The size of gaussian blur (should be odd number).";
+      desc.integer_range.resize(1);
+      auto &integer_range = desc.integer_range.at(0);
+      integer_range.from_value = 1;
+      integer_range.to_value = 30;
+      gaussian_blur_size_ = declare_parameter(desc.name, 9, desc);
+    }
+
+    {
+      rcl_interfaces::msg::ParameterDescriptor desc;
+      desc.name = "gaussian_sigma_x";
+      desc.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+      desc.description = "sigma x of gaussian kernel.";
+      desc.floating_point_range.resize(1);
+      auto &floating_point_range = desc.floating_point_range.at(0);
+      floating_point_range.from_value = 1.0;
+      floating_point_range.to_value = 10.0;
+      floating_point_range.step = 0.01;
+      gaussian_sigma_x_ = declare_parameter(desc.name, 2.0, desc);
+    }
+
+    {
+      rcl_interfaces::msg::ParameterDescriptor desc;
+      desc.name = "gaussian_sigma_y";
+      desc.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+      desc.description = "sigma y of gaussian kernel.";
+      desc.floating_point_range.resize(1);
+      auto &floating_point_range = desc.floating_point_range.at(0);
+      floating_point_range.from_value = 1.0;
+      floating_point_range.to_value = 10.0;
+      floating_point_range.step = 0.01;
+      gaussian_sigma_y_ = declare_parameter(desc.name, 2.0, desc);
+    }
+
+    {
+      rcl_interfaces::msg::ParameterDescriptor desc;
+      desc.name = "min_distance_between_circles";
+      desc.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+      desc.description = "minimum distance between the centers of the detected circles.";
+      desc.floating_point_range.resize(1);
+      auto &floating_point_range = desc.floating_point_range.at(0);
+      floating_point_range.from_value = 0.0;
+      floating_point_range.to_value = 1024.0;
+      floating_point_range.step = 0.01;
+      min_distance_between_circles_ = declare_parameter(desc.name, 0.0, desc);
+    }
+
+    {
+      rcl_interfaces::msg::ParameterDescriptor desc;
+      desc.name = "dp";
+      desc.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+      desc.description = "dp.";
+      desc.floating_point_range.resize(1);
+      auto &floating_point_range = desc.floating_point_range.at(0);
+      floating_point_range.from_value = 0.0;
+      floating_point_range.to_value = 100.0;
+      floating_point_range.step = 0.01;
+      dp_ = declare_parameter(desc.name, 2.0, desc);
+    }
+
+    {
+      rcl_interfaces::msg::ParameterDescriptor desc;
+      desc.name = "min_circle_radius";
+      desc.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
+      desc.description = "The minimum size of the circle.";
+      desc.integer_range.resize(1);
+      auto &integer_range = desc.integer_range.at(0);
+      integer_range.from_value = 0;
+      integer_range.to_value = 500;
+      min_circle_radius_ = declare_parameter(desc.name, 0, desc);
+    }
+
+    {
+      rcl_interfaces::msg::ParameterDescriptor desc;
+      desc.name = "max_circle_radius";
+      desc.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
+      desc.description = "The maximum size of the circle.";
+      desc.integer_range.resize(1);
+      auto &integer_range = desc.integer_range.at(0);
+      integer_range.from_value = 0;
+      integer_range.to_value = 2000;
+      max_circle_radius_ = declare_parameter(desc.name, 0, desc);
+    }
+
+    prev_stamp_ = rclcpp::Time(0, 0);
+
+    window_name_ = "Hough Circle Detection Demo";
+    max_accumulator_threshold_ = 200;
+    max_canny_threshold_ = 255;
+    min_distance_between_circles_ = 0;
+
+    img_pub_ = image_transport::create_publisher(this, "image", imageQoS().get_rmw_qos_profile());
     msg_pub_ = create_publisher<opencv_apps::msg::CircleArrayStamped>("circles", 1);
-    // Nodelet::onInit();
-    // it_ = boost::shared_ptr<image_transport::ImageTransport>(new image_transport::ImageTransport(*nh_));
 
-    // debug_image_type_ = 0;
-    // pnh_->param("queue_size", queue_size_, 3);
-    // pnh_->param("debug_view", debug_view_, false);
-    // if (debug_view_)
-    // {
-    //   always_subscribe_ = debug_view_;
-    // }
-    // prev_stamp_ = ros::Time(0, 0);
+    debug_image_type_ = 0;
+    debug_image_pub_ = image_transport::create_publisher(this, "debug_image", imageQoS().get_rmw_qos_profile());
 
-    // window_name_ = "Hough Circle Detection Demo";
-    // canny_threshold_initial_value_ = 200;
-    // accumulator_threshold_initial_value_ = 50;
-    // max_accumulator_threshold_ = 200;
-    // max_canny_threshold_ = 255;
-    // min_distance_between_circles_ = 0;
-
-    // // declare and initialize both parameters that are subjects to change
-    // canny_threshold_ = canny_threshold_initial_value_;
-    // accumulator_threshold_ = accumulator_threshold_initial_value_;
-
-    // reconfigure_server_ = boost::make_shared<dynamic_reconfigure::Server<Config>>(*pnh_);
-    // dynamic_reconfigure::Server<Config>::CallbackType f =
-    //     boost::bind(&HoughCirclesNodelet::reconfigureCallback, this, boost::placeholders::_1, boost::placeholders::_2);
-    // reconfigure_server_->setCallback(f);
-
-    // img_pub_ = advertiseImage(*pnh_, "image", 1);
-    // msg_pub_ = advertise<opencv_apps::msg::CircleArrayStamped>(*pnh_, "circles", 1);
-
-    // debug_image_type_ = 0;
-    // debug_image_pub_ = advertiseImage(*pnh_, "debug_image", 1);
-
-    // onInitPostProcess();
+    subscribe();
   }
 
-  HoughCircles::~HoughCircles()
-  {
-  }
+  HoughCircles::~HoughCircles() { unsubscribe(); }
 
   rcl_interfaces::msg::SetParametersResult HoughCircles::paramCallback(const std::vector<rclcpp::Parameter> &parameters)
   {
@@ -181,16 +291,6 @@ namespace opencv_apps
     return frame;
   }
 
-  void HoughCircles::imageCallbackWithInfo(const sensor_msgs::msg::Image::ConstSharedPtr &msg, const sensor_msgs::msg::CameraInfo::ConstSharedPtr &cam_info)
-  {
-    doWork(msg, cam_info->header.frame_id);
-  }
-
-  void HoughCircles::imageCallback(const sensor_msgs::msg::Image::ConstSharedPtr &msg)
-  {
-    doWork(msg, msg->header.frame_id);
-  }
-  
   void HoughCircles::doWork(const sensor_msgs::msg::Image::ConstSharedPtr &msg, const std::string &input_frame_from_msg)
   {
     // Work on the image.
@@ -354,14 +454,6 @@ namespace opencv_apps
     prev_stamp_ = msg->header.stamp;
   }
 
-  // void subscribe() // NOLINT(modernize-use-override)
-  // {
-  //   RCLCPP_DEBUG(get_loggger(), "Subscribing to image topic.");
-  //   if (config_.use_camera_info)
-  //     cam_sub_ = it_->subscribeCamera("image", queue_size_, &HoughCirclesNodelet::imageCallbackWithInfo, this);
-  //   else
-  //     img_sub_ = it_->subscribe("image", queue_size_, &HoughCirclesNodelet::imageCallback, this);
-  // }
 } // namespace opencv_apps
 
 RCLCPP_COMPONENTS_REGISTER_NODE(opencv_apps::HoughCircles)

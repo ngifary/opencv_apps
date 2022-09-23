@@ -42,10 +42,6 @@ namespace opencv_apps
 
         const std::string &frameWithDefault(const std::string &frame, const std::string &image_frame);
 
-        void imageCallbackWithInfo(const sensor_msgs::msg::Image::ConstSharedPtr &msg, const sensor_msgs::msg::CameraInfo::ConstSharedPtr &cam_info);
-
-        void imageCallback(const sensor_msgs::msg::Image::ConstSharedPtr &msg);
-
         void doWork(const sensor_msgs::msg::Image::ConstSharedPtr &msg, const std::string &input_frame_from_msg);
 
         void undeclareCannyParameter();
@@ -59,4 +55,4 @@ namespace opencv_apps
 
 } // namespace opencv_apps
 
-#endif
+#endif // OPENCV_APPS_EDGE_DETECTION_NODE_HPP_

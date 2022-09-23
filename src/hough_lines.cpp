@@ -47,37 +47,104 @@ namespace opencv_apps
 {
   HoughLines::HoughLines(const rclcpp::NodeOptions &options) : OpenCVNode("HoughCircles", options)
   {
-    msg_pub_ = create_publisher<opencv_apps::msg::LineArrayStamped>("circles", 1);
-    // Nodelet::onInit();
-    // it_ = boost::shared_ptr<image_transport::ImageTransport>(new image_transport::ImageTransport(*nh_));
+    {
+      rcl_interfaces::msg::ParameterDescriptor desc;
+      desc.name = "use_camera_info";
+      desc.type = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL;
+      desc.description = "Indicates that the camera_info topic should be subscribed to to get the default input_frame_id. Otherwise the frame from the image message will be used.";
+      use_camera_info_ = declare_parameter(desc.name, false, desc);
+    }
 
-    // pnh_->param("queue_size", queue_size_, 3);
-    // pnh_->param("debug_view", debug_view_, false);
-    // if (debug_view_)
-    // {
-    //   always_subscribe_ = true;
-    // }
-    // prev_stamp_ = ros::Time(0, 0);
+    {
+      rcl_interfaces::msg::ParameterDescriptor desc;
+      desc.name = "hough_type";
+      desc.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
+      desc.description = "Hough Line Methods";
+      desc.integer_range.resize(1);
+      auto &integer_range = desc.integer_range.at(0);
+      integer_range.from_value = 0;
+      integer_range.to_value = 1;
+      hough_type_ = declare_parameter(desc.name, 0, desc);
+    }
 
-    // window_name_ = "Hough Lines Demo";
-    // min_threshold_ = 50;
-    // max_threshold_ = 150;
-    // threshold_ = max_threshold_;
+    {
+      rcl_interfaces::msg::ParameterDescriptor desc;
+      desc.name = "threshold";
+      desc.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
+      desc.description = "Hough Line Threshold.";
+      desc.integer_range.resize(1);
+      auto &integer_range = desc.integer_range.at(0);
+      integer_range.from_value = 0;
+      integer_range.to_value = 150;
+      threshold_ = declare_parameter(desc.name, 150, desc);
+    }
 
-    // reconfigure_server_ = boost::make_shared<dynamic_reconfigure::Server<Config> >(*pnh_);
-    // dynamic_reconfigure::Server<Config>::CallbackType f =
-    //     boost::bind(&HoughLinesNodelet::reconfigureCallback, this, boost::placeholders::_1, boost::placeholders::_2);
-    // reconfigure_server_->setCallback(f);
+    {
+      rcl_interfaces::msg::ParameterDescriptor desc;
+      desc.name = "rho";
+      desc.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+      desc.description = "The resolution of the parameter r in pixels. We use 1 pixel.";
+      desc.floating_point_range.resize(1);
+      auto &floating_point_range = desc.floating_point_range.at(0);
+      floating_point_range.from_value = 1.0;
+      floating_point_range.to_value = 100.0;
+      floating_point_range.step = 0.01;
+      rho_ = declare_parameter(desc.name, 1.0, desc);
+    }
 
-    // img_pub_ = advertiseImage(*pnh_, "image", 1);
-    // msg_pub_ = advertise<opencv_apps::LineArrayStamped>(*pnh_, "lines", 1);
+    {
+      rcl_interfaces::msg::ParameterDescriptor desc;
+      desc.name = "theta";
+      desc.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+      desc.description = "The resolution of the parameter \theta in radians. We use 1 degree (CV_PI/180).";
+      desc.floating_point_range.resize(1);
+      auto &floating_point_range = desc.floating_point_range.at(0);
+      floating_point_range.from_value = 1.0;
+      floating_point_range.to_value = 90.0;
+      floating_point_range.step = 0.01;
+      theta_ = declare_parameter(desc.name, 1.0, desc);
+    }
 
-    // onInitPostProcess();
+    {
+      rcl_interfaces::msg::ParameterDescriptor desc;
+      desc.name = "minLineLength";
+      desc.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+      desc.description = "The minimum number of points that can form a line. Lines with less than this number of points are disregarded.";
+      desc.floating_point_range.resize(1);
+      auto &floating_point_range = desc.floating_point_range.at(0);
+      floating_point_range.from_value = 0.0;
+      floating_point_range.to_value = 500.0;
+      floating_point_range.step = 0.01;
+      minLineLength_ = declare_parameter(desc.name, 30.0, desc);
+    }
+
+    {
+      rcl_interfaces::msg::ParameterDescriptor desc;
+      desc.name = "maxLineGap";
+      desc.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+      desc.description = "The maximum gap between two points to be considered in the same line.";
+      desc.floating_point_range.resize(1);
+      auto &floating_point_range = desc.floating_point_range.at(0);
+      floating_point_range.from_value = 0.0;
+      floating_point_range.to_value = 100.0;
+      floating_point_range.step = 0.01;
+      maxLineGap_ = declare_parameter(desc.name, 10.0, desc);
+    }
+
+    prev_stamp_ = rclcpp::Time(0, 0);
+
+    window_name_ = "Hough Lines Demo";
+    min_threshold_ = 50;
+    max_threshold_ = 150;
+    threshold_ = max_threshold_;
+
+    img_pub_ = image_transport::create_publisher(this, "image", imageQoS().get_rmw_qos_profile());
+    msg_pub_ = create_publisher<opencv_apps::msg::LineArrayStamped>("lines", 1);
+
+    subscribe();
   }
 
-  HoughLines::~HoughLines()
-  {
-  }
+  HoughLines::~HoughLines() { unsubscribe(); }
 
   rcl_interfaces::msg::SetParametersResult HoughLines::paramCallback(const std::vector<rclcpp::Parameter> &parameters)
   {
@@ -139,16 +206,6 @@ namespace opencv_apps
     if (frame.empty())
       return image_frame;
     return frame;
-  }
-
-  void HoughLines::imageCallbackWithInfo(const sensor_msgs::msg::Image::ConstSharedPtr &msg, const sensor_msgs::msg::CameraInfo::ConstSharedPtr &cam_info)
-  {
-    doWork(msg, cam_info->header.frame_id);
-  }
-
-  void HoughLines::imageCallback(const sensor_msgs::msg::Image::ConstSharedPtr &msg)
-  {
-    doWork(msg, msg->header.frame_id);
   }
 
   void HoughLines::doWork(const sensor_msgs::msg::Image::ConstSharedPtr &msg, const std::string &input_frame_from_msg)
@@ -237,11 +294,9 @@ namespace opencv_apps
 
           cv::Point pt1(cvRound(x0 + alpha * (-sin_t)), cvRound(y0 + alpha * cos_t));
           cv::Point pt2(cvRound(x0 - alpha * (-sin_t)), cvRound(y0 - alpha * cos_t));
-#ifndef CV_VERSION_EPOCH
+
           cv::line(out_image, pt1, pt2, cv::Scalar(255, 0, 0), 3, cv::LINE_AA);
-#else
-          cv::line(out_image, pt1, pt2, cv::Scalar(255, 0, 0), 3, CV_AA);
-#endif
+
           opencv_apps::msg::Line line_msg;
           line_msg.pt1.x = pt1.x;
           line_msg.pt1.y = pt1.y;
@@ -252,7 +307,7 @@ namespace opencv_apps
 
         break;
       }
-      case opencv_apps::PROBABILISTIC_HOUGH_TRANSFORM
+      case opencv_apps::PROBABILISTIC_HOUGH_TRANSFORM:
       default:
       {
         std::vector<cv::Vec4i> p_lines;
@@ -263,11 +318,8 @@ namespace opencv_apps
         /// Show the result
         for (const cv::Vec4i &l : p_lines)
         {
-#ifndef CV_VERSION_EPOCH
           cv::line(out_image, cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), cv::Scalar(255, 0, 0), 3, cv::LINE_AA);
-#else
-          cv::line(out_image, cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), cv::Scalar(255, 0, 0), 3, CV_AA);
-#endif
+
           opencv_apps::msg::Line line_msg;
           line_msg.pt1.x = l[0];
           line_msg.pt1.y = l[1];
@@ -299,15 +351,6 @@ namespace opencv_apps
 
     prev_stamp_ = msg->header.stamp;
   }
-
-  // void subscribe()  // NOLINT(modernize-use-override)
-  // {
-  //   NODELET_DEBUG("Subscribing to image topic.");
-  //   if (config_.use_camera_info)
-  //     cam_sub_ = it_->subscribeCamera("image", queue_size_, &HoughLinesNodelet::imageCallbackWithInfo, this);
-  //   else
-  //     img_sub_ = it_->subscribe("image", queue_size_, &HoughLinesNodelet::imageCallback, this);
-  // }
 } // namespace opencv_apps
 
 RCLCPP_COMPONENTS_REGISTER_NODE(opencv_apps::HoughLines)

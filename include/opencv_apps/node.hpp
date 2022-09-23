@@ -53,6 +53,14 @@ namespace opencv_apps
             return qos;
         }
 
+        void imageCallbackWithInfo(const sensor_msgs::msg::Image::ConstSharedPtr &msg, const sensor_msgs::msg::CameraInfo::ConstSharedPtr &cam_info);
+
+        void imageCallback(const sensor_msgs::msg::Image::ConstSharedPtr &msg);
+
+        void doWork(const sensor_msgs::msg::Image::ConstSharedPtr &msg, const std::string &input_frame_from_msg);
+
+        void subscribe();
+
         void unsubscribe();
 
     public:

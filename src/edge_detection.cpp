@@ -88,14 +88,10 @@ namespace opencv_apps
 
     img_pub_ = image_transport::create_publisher(this, "edge", imageQoS().get_rmw_qos_profile());
 
-    RCLCPP_DEBUG(this->get_logger(), "Subscribing to image topic.");
-    if (use_camera_info_)
-      cam_sub_ = image_transport::create_camera_subscription(this, "image", std::bind(&EdgeDetection::imageCallbackWithInfo, this, std::placeholders::_1, std::placeholders::_2), "raw", imageQoS().get_rmw_qos_profile());
-    else
-      img_sub_ = image_transport::create_subscription(this, "image", std::bind(&EdgeDetection::imageCallback, this, std::placeholders::_1), "raw", imageQoS().get_rmw_qos_profile());
+    subscribe();
   }
 
-  EdgeDetection::~EdgeDetection() {}
+  EdgeDetection::~EdgeDetection() { unsubscribe(); }
 
   void EdgeDetection::undeclareCannyParameter()
   {
@@ -282,16 +278,6 @@ namespace opencv_apps
     if (frame.empty())
       return image_frame;
     return frame;
-  }
-
-  void EdgeDetection::imageCallbackWithInfo(const sensor_msgs::msg::Image::ConstSharedPtr &msg, const sensor_msgs::msg::CameraInfo::ConstSharedPtr &cam_info)
-  {
-    doWork(msg, cam_info->header.frame_id);
-  }
-
-  void EdgeDetection::imageCallback(const sensor_msgs::msg::Image::ConstSharedPtr &msg)
-  {
-    doWork(msg, msg->header.frame_id);
   }
 
   void EdgeDetection::doWork(const sensor_msgs::msg::Image::ConstSharedPtr &msg, const std::string &input_frame_from_msg)
