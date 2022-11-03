@@ -42,7 +42,7 @@ namespace opencv_apps
 
         const std::string &frameWithDefault(const std::string &frame, const std::string &image_frame);
 
-        void doWork(const sensor_msgs::msg::Image::ConstSharedPtr &msg, const std::string &input_frame_from_msg);
+        void doWork(const sensor_msgs::msg::Image::ConstSharedPtr &msg, const std::string &input_frame_from_msg) override;
 
         void undeclareCannyParameter();
 

@@ -57,7 +57,14 @@ namespace opencv_apps
 
         void imageCallback(const sensor_msgs::msg::Image::ConstSharedPtr &msg);
 
-        void doWork(const sensor_msgs::msg::Image::ConstSharedPtr &msg, const std::string &input_frame_from_msg);
+        /**
+         * @brief Virtual abstract doWork method. To be implemented by every child. 
+         * 
+         * @param msg 
+         * @param input_frame_from_msg 
+         */
+        virtual void 
+        doWork(const sensor_msgs::msg::Image::ConstSharedPtr &msg, const std::string &input_frame_from_msg);
 
         void subscribe();
 

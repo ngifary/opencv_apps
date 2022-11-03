@@ -56,8 +56,8 @@ namespace opencv_apps
 
     void OpenCVNode::doWork(const sensor_msgs::msg::Image::ConstSharedPtr &msg, const std::string &input_frame_from_msg)
     {
-        (void) msg;
-        (void) input_frame_from_msg;
+        (void)msg;
+        (void)input_frame_from_msg;
     }
 
     void OpenCVNode::unsubscribe()
